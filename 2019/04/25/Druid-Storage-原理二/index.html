@@ -5,7 +5,7 @@
   
 
 
-<html class="theme-next muse use-motion" lang>
+<html class="theme-next mist use-motion" lang="zh-Hans">
 <head><meta name="generator" content="Hexo 3.8.0">
   <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="druid,">
 
 
 
@@ -79,17 +79,20 @@
 
 
 
-<meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta name="description" content="Segment生成过程 Segment load过程 Segment Query过程 Druid的编码和压缩   Segment生成过程  Add Row to Map Begin persist to disk Write version file Merge and write dimension dict Write time column Write metric column Wri">
+<meta name="keywords" content="druid">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2019/04/23/hello-world/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
-<meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-04-23T04:54:23.143Z">
+<meta property="og:title" content="Druid Storage 原理二">
+<meta property="og:url" content="http://yoursite.com/2019/04/25/Druid-Storage-原理二/index.html">
+<meta property="og:site_name" content="datawall">
+<meta property="og:description" content="Segment生成过程 Segment load过程 Segment Query过程 Druid的编码和压缩   Segment生成过程  Add Row to Map Begin persist to disk Write version file Merge and write dimension dict Write time column Write metric column Wri">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/pasted-17.png">
+<meta property="og:updated_time" content="2019-04-25T09:42:11.683Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta name="twitter:title" content="Druid Storage 原理二">
+<meta name="twitter:description" content="Segment生成过程 Segment load过程 Segment Query过程 Druid的编码和压缩   Segment生成过程  Add Row to Map Begin persist to disk Write version file Merge and write dimension dict Write time column Write metric column Wri">
+<meta name="twitter:image" content="http://yoursite.com/images/pasted-17.png">
 
 
 
@@ -97,15 +100,15 @@
   var NexT = window.NexT || {};
   var CONFIG = {
     root: '/',
-    scheme: 'Muse',
+    scheme: 'Mist',
     version: '5.1.4',
-    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: true,
     tabs: true,
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
     duoshuo: {
       userId: '0',
-      author: 'Author'
+      author: '博主'
     },
     algolia: {
       applicationID: '',
@@ -119,13 +122,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2019/04/23/hello-world/">
+  <link rel="canonical" href="http://yoursite.com/2019/04/25/Druid-Storage-原理二/">
 
 
 
 
 
-  <title>Hello World | Hexo</title>
+  <title>Druid Storage 原理二 | datawall</title>
   
 
 
@@ -137,7 +140,7 @@
 
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
   
   
@@ -155,7 +158,7 @@
     <div class="custom-logo-site-title">
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Hexo</span>
+        <span class="site-title">datawall</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -185,7 +188,27 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
             
-            Home
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
           </a>
         </li>
       
@@ -195,7 +218,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
             
-            Archives
+            归档
           </a>
         </li>
       
@@ -232,16 +255,16 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/23/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/25/Druid-Storage-原理二/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="John Doe">
+      <meta itemprop="name" content="datawall">
       <meta itemprop="description" content>
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
+      <meta itemprop="name" content="datawall">
     </span>
 
     
@@ -249,7 +272,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Hello World</h1>
+          <h1 class="post-title" itemprop="name headline">Druid Storage 原理二</h1>
         
 
         <div class="post-meta">
@@ -259,10 +282,10 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">发表于</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-23T12:54:23+08:00">
-                2019-04-23
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-25T17:37:00+08:00">
+                2019-04-25
               </time>
             
 
@@ -271,6 +294,28 @@
             
           </span>
 
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/druid/" itemprop="url" rel="index">
+                    <span itemprop="name">druid</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -299,15 +344,47 @@
       
 
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+        <!-- toc -->
+<ul>
+<li><a href="#segment生成过程">Segment生成过程</a></li>
+<li><a href="#segment-load过程">Segment load过程</a></li>
+<li><a href="#segment-query过程">Segment Query过程</a></li>
+<li><a href="#druid的编码和压缩">Druid的编码和压缩</a></li>
+</ul>
+<!-- tocstop -->
+<h1><span id="segment生成过程">Segment生成过程</span></h1><hr>
+<ol>
+<li>Add Row to Map</li>
+<li>Begin persist to disk</li>
+<li>Write version file</li>
+<li>Merge and write dimension dict</li>
+<li>Write time column</li>
+<li>Write metric column</li>
+<li>Write dimension column</li>
+<li>Write index.drd</li>
+<li>Merge and write bitmaps</li>
+<li>Write metadata.drd<h1><span id="segment-load过程">Segment load过程</span></h1></li>
+</ol>
+<hr>
+<p><img src="/images/pasted-17.png" alt="upload successful"></p>
+<ol>
+<li>Read version</li>
+<li>Load segment to MappedByteBuffer</li>
+<li>Get column offset from meta</li>
+<li>Deserialize each column from ByteBuffer</li>
+</ol>
+<h1><span id="segment-query过程">Segment Query过程</span></h1><hr>
+<p>Druid查询的最小单位是Segment，Segment在查询之前必须先load到内存，load过程如上一步所述。如果没有索引的话，我们的查询过程就只能Scan的，遇到符合条件的行选择出来，但是所有查询都进行全表Scan肯定是不可行的，所以我们需要索引来快速过滤不需要的行。Druid的Segmenet查询过程如下：</p>
+<ol>
+<li>构造1个Cursor进行迭代</li>
+<li>查询之前构造出Fliter</li>
+<li>根据Index匹配Fliter，得到满足条件的Row的Offset</li>
+<li>根据每列的ColumnSelector去指定Row读取需要的列。<h1><span id="druid的编码和压缩">Druid的编码和压缩</span></h1></li>
+</ol>
+<hr>
+<p>前面已经提到了，Druid对Long型的指标进行了差分编码和Table编码，Long型和Float型的指标进行了LZ4或者LZF压缩。</p>
+<p>其实编码和压缩本质上是一个东西，一切熵增的编码都是压缩。 在计算机领域，我们一般把针对特定类型的编码称之为编码，针对任意类型的通用编码称之为压缩。</p>
+<p>编码和压缩的本质就是让每一个bit尽可能带有更多的信息。</p>
 
       
     </div>
@@ -323,6 +400,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/druid/" rel="tag"># druid</a>
+          
+        </div>
+      
 
       
       
@@ -332,14 +415,18 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2019/04/25/Druid-Storage-原理/" rel="next" title="Druid Storage 原理一">
+                <i class="fa fa-chevron-left"></i> Druid Storage 原理一
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/04/23/My-New-Post/" rel="prev" title="My New Post">
-                My New Post <i class="fa fa-chevron-right"></i>
+              <a href="/2019/04/26/树/" rel="prev" title="基本数据结构二-树">
+                基本数据结构二-树 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -394,10 +481,10 @@
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
+            文章目录
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
+            站点概览
           </li>
         </ul>
       
@@ -406,7 +493,7 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
-              <p class="site-author-name" itemprop="name">John Doe</p>
+              <p class="site-author-name" itemprop="name">datawall</p>
               <p class="site-description motion-element" itemprop="description"></p>
           </div>
 
@@ -417,14 +504,32 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">2</span>
-                  <span class="site-state-item-name">posts</span>
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
                 </a>
               </div>
             
 
             
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
 
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
             
 
           </nav>
@@ -454,7 +559,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">1.</span> <span class="nav-text">Segment生成过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">2.</span> <span class="nav-text">Segment load过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">3.</span> <span class="nav-text">Segment Query过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">4.</span> <span class="nav-text">Druid的编码和压缩</span></a></li></ol></div>
             
 
           </div>
@@ -478,13 +583,13 @@
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">John Doe</span>
+  <span class="author" itemprop="copyrightHolder">datawall</span>
 
   
 </div>
 
 
-  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
 
 
 
@@ -492,7 +597,7 @@
 
 
 
-  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
 
 
 

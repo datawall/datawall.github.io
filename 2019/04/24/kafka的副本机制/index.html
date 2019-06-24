@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="kafka,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="分区和副本 副本分配算法 kafka中的副本 ISR集合中的副本必须满足的条件 副本同步时的两个重要概念 副本协同机制 第一次发送fetch请求 第二次发送fetch请求     分区和副本partition的副本被称为replica，每个分区可以有多个副本，并且在副本集中会存在一个leader副本，所有的读写请求都会通过leader完成，follower复制只负责备份数据。 副本会均匀分配到">
+<meta name="keywords" content="kafka">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kafka的副本机制">
+<meta property="og:url" content="http://yoursite.com/2019/04/24/kafka的副本机制/index.html">
+<meta property="og:site_name" content="datawall">
+<meta property="og:description" content="分区和副本 副本分配算法 kafka中的副本 ISR集合中的副本必须满足的条件 副本同步时的两个重要概念 副本协同机制 第一次发送fetch请求 第二次发送fetch请求     分区和副本partition的副本被称为replica，每个分区可以有多个副本，并且在副本集中会存在一个leader副本，所有的读写请求都会通过leader完成，follower复制只负责备份数据。 副本会均匀分配到">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/pasted-6.png">
+<meta property="og:updated_time" content="2019-04-24T12:23:36.842Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="kafka的副本机制">
+<meta name="twitter:description" content="分区和副本 副本分配算法 kafka中的副本 ISR集合中的副本必须满足的条件 副本同步时的两个重要概念 副本协同机制 第一次发送fetch请求 第二次发送fetch请求     分区和副本partition的副本被称为replica，每个分区可以有多个副本，并且在副本集中会存在一个leader副本，所有的读写请求都会通过leader完成，follower复制只负责备份数据。 副本会均匀分配到">
+<meta name="twitter:image" content="http://yoursite.com/images/pasted-6.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/24/kafka的副本机制/">
+
+
+
+
+
+  <title>kafka的副本机制 | datawall</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">datawall</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/24/kafka的副本机制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="datawall">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="datawall">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">kafka的副本机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-24T19:18:00+08:00">
+                2019-04-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kafka/" itemprop="url" rel="index">
+                    <span itemprop="name">kafka</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!-- toc -->
+<ul>
+<li><a href="#分区和副本">分区和副本</a></li>
+<li><a href="#副本分配算法">副本分配算法</a></li>
+<li><a href="#kafka中的副本">kafka中的副本</a></li>
+<li><a href="#isr集合中的副本必须满足的条件">ISR集合中的副本必须满足的条件</a></li>
+<li><a href="#副本同步时的两个重要概念">副本同步时的两个重要概念</a></li>
+<li><a href="#副本协同机制">副本协同机制</a><ul>
+<li><a href="#第一次发送fetch请求">第一次发送fetch请求</a></li>
+<li><a href="#第二次发送fetch请求">第二次发送fetch请求</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h1><span id="分区和副本">分区和副本</span></h1><p>partition的副本被称为replica，每个分区可以有多个副本，并且在副本集中会存在一个leader副本，所有的读写请求都会通过leader完成，follower复制<strong>只负责备份数据</strong>。</p>
+<p>副本会均匀分配到多台broker上，当leader节点挂掉之后，会从副本集中重新选出一个副本作为leader继续提供服务</p>
+<h1><span id="副本分配算法">副本分配算法</span></h1><ol>
+<li>将所有N Broker和待分配的i个Partition排序.</li>
+<li>将第i个Partition分配到第(i mod n)个Broker上.</li>
+<li>将第i个Partition的第j个副本分配到第((i + j) mod n)个Broker上.</li>
+</ol>
+<h1><span id="kafka中的副本">kafka中的副本</span></h1><hr>
+<ol>
+<li>leader副本：响应客户端的读写请求</li>
+<li>follow副本：备份leader的数据，<strong>不进行读写操作</strong></li>
+<li>ISR副本：leader副本和所有能够与leader副本保持基本同步的follow副本，如 果follow副本和leader副本数据同步速度过慢，该follow将会被T出ISR副本</li>
+</ol>
+<p>Leader副本处理分区的所有读写请求并维护自身以及Follower副本的状态。当Leader副本失效时，会从Follower副本中选举一个新的Leader副本对外提供读写服务。</p>
+<h1><span id="isr集合中的副本必须满足的条件">ISR集合中的副本必须满足的条件</span></h1><hr>
+<ol>
+<li>副本<strong>所在的节点</strong>与zk相连</li>
+<li>副本的最后一条消息和leader副本的最后一条消息的差值不能超过阈值<code>replica.lag.time.max.ms</code>默认为10秒。如果该follower在此时间间隔之内没有追上leader,则该follower将会被踢出ISR   </li>
+</ol>
+<p>满足上面2个条件则认为该副本或者节点处于同步中（in sync）。Leader副本会追踪所有同步中的节点，一旦一个节点宕机或者落后太久，Leader就会将该节点从同步副本中ISR列表中移除。Follower从Leader副本同步数据，不是同步，也不是单纯的异步。而是采用了一个同步列表的方式来做了同步和异步的折中。</p>
+<h1><span id="副本同步时的两个重要概念">副本同步时的两个重要概念</span></h1><hr>
+<ol>
+<li>LEO（Last end offset） <strong>记录了该副本底层日志中的下一条消息的offset</strong>，例如LEO为10，那么当前的offset为9</li>
+<li>HW （High water）<strong>标记着可消费的消息</strong>，ISR列表中最小的LEO作为一个分区的HW。HW之前表示已经提交的消息，消费者只能消费已经提交的，HW之后的消息消费者不能消费，因为HW之后的消息表示还没有被ISR列表中的Follower同步；<br>对于同一个副本而言HW不会大于LEO，小于等于HW的消息将会被认为是已备份的。</li>
+</ol>
+<p><img src="/images/pasted-6.png" alt="upload successful"><br>也就是说消息写入到所有副本的日志中才算提交，才可以被消费者消费。<strong>这是对消费者来说的，生产者是否要等待消息都被写入所有副本之后才收到返回是另外一回事</strong>，这个可以通过acks来配置，kafka为生产者提供3种消息确认机制（request.required.acks参数）：</p>
+<ol>
+<li>acks=0，生产者无需等待代理返回确认，就是可以连续发送，但是无法保证消息是否被代理收到。</li>
+<li>acks=1，生产者需要等待Leader副本以及成功写入日志。这种方式降级了消息丢失的可能性，但是也只是Leader写入日志而不管Follower是否写入。</li>
+<li>acks=-1，Leader副本和所有Follower都写入日志才会向生产者发送确认信息。</li>
+</ol>
+<h1><span id="副本协同机制">副本协同机制</span></h1><hr>
+<p><strong>producer将消息发送到该partition的leader上，leader会把消息写入其本地log，每个follower都从leader pull数据。在follower收到消息并且将消息写入本地log之后会向leader发送ack，一旦leader收到了ISR中所有replica的ACK，该消息就被认为已经commit了，leader会增加HW并向producer发送ACK</strong>  </p>
+<h2><span id="第一次发送fetch请求">第一次发送fetch请求</span></h2><hr>
+<p>follower发送fetch请求，并带上自己的LEO<br>leader端的操作 </p>
+<ol>
+<li>当producer发送一个消息给leader之后，leader会把消息写入磁盘 </li>
+<li>然后leader会更新LEO，这时候尝试更新HW，<strong>HW是取LEO和remoteLEO的较小值</strong>，这时候HW依然为0.（<strong>remoteLEO取所有Follower发过来的offset中最小的一个</strong>） </li>
+<li>把消息内容和当前的HW值发送给follower副本</li>
+</ol>
+<p>当收到响应之后，follower端的操作 </p>
+<ol>
+<li>将消息写入本地log，同时更新LEO </li>
+<li>比较本地LEO和返回的HW,比较他们取小值赋值给HW</li>
+</ol>
+<h2><span id="第二次发送fetch请求">第二次发送fetch请求</span></h2><hr>
+<p>leader </p>
+<ol>
+<li>更新remoteLEO=1 </li>
+<li>更新HW为1 </li>
+<li>把数据和当前HW返回给follower，如果这时候没有数据，则返回空</li>
+</ol>
+<p>follower收到response之后 </p>
+<ol>
+<li>如果有数据则写入本地日志，并且更新LEO </li>
+<li>更新HW的值<br>到目前为止，consumer就可以消费offset=0的消息了</li>
+</ol>
+<p>原文：<a href="https://blog.csdn.net/qq_39907763/article/details/82697452" target="_blank" rel="noopener">https://blog.csdn.net/qq_39907763/article/details/82697452</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kafka/" rel="tag"># kafka</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/24/Kafka是靠什么机制保持高可靠，高可用的？/" rel="next" title="Kafka是靠什么机制保持高可靠，高可用的？">
+                <i class="fa fa-chevron-left"></i> Kafka是靠什么机制保持高可靠，高可用的？
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/24/kafka问题集锦/" rel="prev" title="kafka问题集锦">
+                kafka问题集锦 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">datawall</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">1.</span> <span class="nav-text">分区和副本</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">2.</span> <span class="nav-text">副本分配算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">3.</span> <span class="nav-text">kafka中的副本</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">4.</span> <span class="nav-text">ISR集合中的副本必须满足的条件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">5.</span> <span class="nav-text">副本同步时的两个重要概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">6.</span> <span class="nav-text">副本协同机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">6.1.</span> <span class="nav-text">第一次发送fetch请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">6.2.</span> <span class="nav-text">第二次发送fetch请求</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">datawall</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

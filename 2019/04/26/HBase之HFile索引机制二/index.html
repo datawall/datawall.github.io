@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hbase,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="索引分层的原因 V2版本Index Block有两类 Root Index Block NonRoot Index Block   HFile数据完整索引流程 索引块分裂 Append流程 Finalize阶段   总 结   索引分层的原因 HFile中索引结构根据索引层级的不同分为两种：single-level和mutil-level，前者表示单层索引，后者表示多级索引，一般为两级或三级。">
+<meta name="keywords" content="hbase">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HBase之HFile索引机制二HFile索引结构解析">
+<meta property="og:url" content="http://yoursite.com/2019/04/26/HBase之HFile索引机制二/index.html">
+<meta property="og:site_name" content="datawall">
+<meta property="og:description" content="索引分层的原因 V2版本Index Block有两类 Root Index Block NonRoot Index Block   HFile数据完整索引流程 索引块分裂 Append流程 Finalize阶段   总 结   索引分层的原因 HFile中索引结构根据索引层级的不同分为两种：single-level和mutil-level，前者表示单层索引，后者表示多级索引，一般为两级或三级。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/pasted-36.png">
+<meta property="og:image" content="http://yoursite.com/images/pasted-37.png">
+<meta property="og:image" content="http://yoursite.com/images/pasted-38.png">
+<meta property="og:image" content="http://yoursite.com/images/pasted-39.png">
+<meta property="og:image" content="http://yoursite.com/images/pasted-40.png">
+<meta property="og:image" content="http://yoursite.com/images/pasted-41.png">
+<meta property="og:updated_time" content="2019-04-26T07:15:35.740Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HBase之HFile索引机制二HFile索引结构解析">
+<meta name="twitter:description" content="索引分层的原因 V2版本Index Block有两类 Root Index Block NonRoot Index Block   HFile数据完整索引流程 索引块分裂 Append流程 Finalize阶段   总 结   索引分层的原因 HFile中索引结构根据索引层级的不同分为两种：single-level和mutil-level，前者表示单层索引，后者表示多级索引，一般为两级或三级。">
+<meta name="twitter:image" content="http://yoursite.com/images/pasted-36.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/26/HBase之HFile索引机制二/">
+
+
+
+
+
+  <title>HBase之HFile索引机制二HFile索引结构解析 | datawall</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">datawall</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/26/HBase之HFile索引机制二/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="datawall">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="datawall">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">HBase之HFile索引机制二HFile索引结构解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-26T14:48:00+08:00">
+                2019-04-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hbase/" itemprop="url" rel="index">
+                    <span itemprop="name">hbase</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!-- toc -->
+<ul>
+<li><a href="#索引分层的原因">索引分层的原因</a></li>
+<li><a href="#v2版本index-block有两类">V2版本Index Block有两类</a><ul>
+<li><a href="#root-index-block">Root Index Block</a></li>
+<li><a href="#nonroot-index-block">NonRoot Index Block</a></li>
+</ul>
+</li>
+<li><a href="#hfile数据完整索引流程">HFile数据完整索引流程</a></li>
+<li><a href="#索引块分裂">索引块分裂</a><ul>
+<li><a href="#append流程">Append流程</a></li>
+<li><a href="#finalize阶段">Finalize阶段</a></li>
+</ul>
+</li>
+<li><a href="#总-结">总 结</a></li>
+</ul>
+<!-- tocstop -->
+<h1><span id="索引分层的原因">索引分层的原因</span></h1><hr>
+<p>HFile中索引结构根据索引层级的不同分为两种：single-level和mutil-level，前者表示单层索引，后者表示多级索引，一般为两级或三级。HFile V1版本中只有single-level一种索引结构，V2版本中引入多级索引。之所以引入多级索引，是因为随着HFile文件越来越大，Data Block越来越多，索引数据也越来越大，已经无法全部加载到内存中（V1版本中一个Region Server的索引数据加载到内存会占用几乎6G空间），多级索引可以只加载部分索引，降低内存使用空间。上一篇文章 《HBase-存储文件HFile结构解析》，我们提到Bloom    Filter内存使用问题是促使V1版本升级到V2版本的一个原因，再加上这个原因，这两个原因就是V1版本升级到V2版本最重要的两个因素。     </p>
+<h1><span id="v2版本index-block有两类">V2版本Index Block有两类</span></h1><hr>
+<p>分为Root Index Block和NonRoot Index Block，其中NonRoot Index Block又分为Intermediate Index Block和Leaf Index Block两种。HFile中索引结构类似于一棵树，Root Index Block表示索引数根节点，Intermediate Index Block表示中间节点，Leaf Index block表示叶子节点，叶子节点直接指向实际数据块。</p>
+<p><img src="/images/pasted-36.png" alt="upload successful"></p>
+<p>HFile中除了Data Block需要索引之外，上一篇文章提到过Bloom Block也需要索引，索引结构实际上就是采用了single-level结构，文中<strong>Bloom Index Block就是一种Root Index Block</strong>。</p>
+<p>对于Data Block，<strong>由于HFile刚开始数据量较小，索引采用single-level结构，只有Root Index一层索引，直接指向数据块。当数据量慢慢变大，Root Index Block满了之后，索引就会变为mutil-level结构，由一层索引变为两层，根节点指向叶子节点，叶子节点指向实际数据块。如果数据量再变大，索引层级就会变为三层</strong>。</p>
+<p>下面就针对Root index Block和NonRoot index Block两种结构进行解析，因为Root Index Block已经在上面一篇文章中分析过， 此处简单带过，重点介绍NonRoot Index Block结构（InterMediate Index Block和Ieaf Index Block在内存和磁盘中存储格式相同，都为NonRoot Index Block格式）。</p>
+<h2><span id="root-index-block">Root Index Block</span></h2><p>Root Index Block表示索引树根节点索引块，可以作为bloom的直接索引，也可以作为data索引的根索引。而且对于single-level 和mutil-level两种索引结构对应的Root Index Block略有不同，<strong>本文以mutil-level索引结构为例进行分析（single-level索引结构是mutual-level的一种简化场景）</strong>，在内存和磁盘中的格式如下图所示：   </p>
+<p><img src="/images/pasted-37.png" alt="upload successful"><br>其中Index Entry表示具体的索引对象，每个索引对象由3个字段组成    </p>
+<ol>
+<li>Block Offset表示索引指向数据块的偏移量</li>
+<li>BlockDataSize 表示索引指向数据块在磁盘上的大小</li>
+<li>BlockKey表示索引指向数据块中的第一个key</li>
+<li>除此之外，还有另外3个字段用来记录MidKey的相关信息，<strong>MidKey表示HFile所有Data Block中中间的一个Data Block，用于在对HFile进行split操作时，快速定位HFile的中间位置</strong>。  </li>
+</ol>
+<p><strong>需要注意的是single-level索引结构和mutil-level结构相比，就只缺少MidKey这三个字段</strong>。</p>
+<p>Root Index Block会在HFile解析的时候直接加载到内存中，此处需要注意在Trailer Block中有一个字段为dataIndexCount，就表示此处Index Entry的个数。因为Index Entry并不定长，只有知道Entry的个数才能正确的将所有Index Entry加载到内存。</p>
+<h2><span id="nonroot-index-block">NonRoot Index Block</span></h2><p>当HFile中Data Block越来越多，single-level结构的索引已经不足以支撑所有数据都加载到内存，需要分化为mutil-level结构。mutil-level结构中NonRoot Index Block作为中间层节点或者叶子节点存在，无论是中间节点还是叶子节点，其都拥有相同的结构，如下图所示：</p>
+<p><img src="/images/pasted-38.png" alt="upload successful"><br>和Root Index Block相同，NonRoot Index Block中最核心的字段也是Index Entry，用于指向叶子节点块或者数据块。<strong>不同的是，NonRoot Index Block结构中增加了block块的内部索引entry Offset字段</strong>，entry Offset表示index Entry在该block中的相对偏移量（相对于第一个index Entry)，用于实现block内的二分查找。所有非根节点索引块，包括Intermediate index block和leaf index block，在其内部定位一个key的具体索引并不是通过遍历实现，<strong>而是使用二分查找算法</strong>，这样可以更加高效快速地定位到待查找key。</p>
+<h1><span id="hfile数据完整索引流程">HFile数据完整索引流程</span></h1><p>了解了HFile中数据索引块的两种结构之后，就来看看如何使用这些索引数据块进行数据的高效检索。整个索引体系类似于MySQL 的B+树结构，但是又有所不同，比B+树简单，并没有复杂的分裂操作。具体见下图所示：</p>
+<p><img src="/images/pasted-39.png" alt="upload successful"></p>
+<p>图中上面三层为索引层，<strong>在数据量不大的时候只有最上面一层，数据量大了之后开始分裂为多层，最多三层</strong>，如图所示。最下面一层为数据层，存储用户的实际keyvalue数据。这个索引树结构类似于InnoSQL的聚集索引，只是HBase并没有辅助索引的概念。  </p>
+<p>图中红线表示一次查询的索引过程（HBase中相关类为HFileBlockIndex和HFileReaderV2）</p>
+<p>基本流程可以表示为：</p>
+<ol>
+<li>用户输入rowkey为fb，在root index block中通过二分查找定位到fb在’a’和’m’之间，因此需要访问索引’a’指向的中间节点。因为root index block常驻内存，所以这个过程很快；<ol start="2">
+<li>将索引’a’指向的中间节点索引块加载到内存，然后通过二分查找定位到fb在index ‘d’和’h’之间，接下来访问索引’d’指向的叶子节点；</li>
+<li>同理，将索引’d’指向的中间节点索引块加载到内存，一样通过二分查找定位找到fb在index ‘f’和’g’之间，最后需要访问索引’f’指向的数据块节点；</li>
+<li>将索引’f’指向的数据块加载到内存，通过遍历的方式找到对应的keyvalue。</li>
+</ol>
+</li>
+</ol>
+<p>上述流程中因为<strong>中间节点、叶子节点和数据块都需要加载到内存，所以io次数正常为3次</strong>。但是实际上HBase为block提供了缓存机制，可以将频繁使用的block缓存在内存中，可以进一步加快实际读取过程。所以，在HBase中，通常一次随机读请求最多会产生3次io，如果数据量小（只有一层索引），数据已经缓存到了内存，就不会产生io。</p>
+<h1><span id="索引块分裂">索引块分裂</span></h1><p>上文中已经提到，当数据量少、文件小的时候，只需要一个root index block就可以完成索引，即索引树只有一层。当数据不断写入，文件变大之后，索引数据也会相应变大，索引结构就会由single-level变为mulit-level，期间涉及到索引块的写入和分裂，本节来关注一下数据写入是如何引起索引块分裂的。   </p>
+<p>如果大家之前看过HBase系列另一篇博文《HBase数据写入之Memstore Flush》，可以知道memstore flush主要分为3个阶段，  </p>
+<ol>
+<li>第一个阶段会讲memstore中的keyvalue数据snapshot，</li>
+<li>第二阶段再将这部分数据flush的HFile，并生成在临时目录，</li>
+<li>第三阶段将临时文件移动到指定的ColumnFamily目录下。   </li>
+</ol>
+<p>很显然，<strong>第二阶段将keyvalue数据flush到HFile将会是关注的重点</strong>（flush相关代码在DefaultStoreFlusher类中）。整个flush阶段又可以分为两阶段：</p>
+<ol>
+<li>append阶段：memstore中keyvalue首先会写入到HFile中数据块；</li>
+<li>finalize阶段：修改HFlie中meta元数据块，索引数据块以及Trailer数据块等。</li>
+</ol>
+<h2><span id="append流程">Append流程</span></h2><p>具体key value数据的append以及finalize过程在HFileWriterV2文件中，其中append流程可以大体表征为：</p>
+<p><img src="/images/pasted-40.png" alt="upload successful"></p>
+<ol>
+<li>预检查：检查key的大小是否大于前一个key，如果大于则不符合HBase顺序排列的原理，抛出异常；检查value是否是null，如果为null也抛出异常；</li>
+<li>block是否写满：检查当前Data Block是否已经写满，如果没有写满就直接写入keyvalue；否则就需要执行数据块落盘以及索引块修改操作；</li>
+<li><strong>数据落盘并修改索引</strong>：如果DataBlock写满，首先将block块写入流；<strong>再生成一个leaf index entry，写入leaf Index block</strong>；再检查该leaf index block是否已经写满需要落盘，如果已经写满，就将该leaf index block写入到输出流，并且为索引树根节点root index block新增一个索引，指向叶子节点(second-level index)；</li>
+<li>生成一个新的block：重新reset输出流，初始化startOffset为-1； </li>
+<li>写入keyvalue：将keyvalue以流的方式写入输出流，同时需要写入memstoreTS；除此之外，如果该key是当前block的第一个key，需要赋值给变量firstKeyInBlock。</li>
+</ol>
+<h2><span id="finalize阶段">Finalize阶段</span></h2><p>memstore中所有keyvalue都经过append阶段输出到HFile后，会执行一次finalize过程，主要更新HFile中meta元数据块、索引数据块以及Trailer数据块，其中对索引数据块的更新是我们关心的重点，此处详细解析，上述append流程中c步骤’数据落盘并修改索引’会使得root index block不断增多，当增大到一定程度之后就需要分裂，分裂示意图如下图所示：</p>
+<p><img src="/images/pasted-41.png" alt="upload successful"><br>上图所示，分裂前索引结构为second-level结构，图中没有画出Data Blocks，根节点索引指向叶子节点索引块。finalize阶段系统会对Root Index Block进行大小检查，如果大小大于规定的大小就需要进行分裂，图中分裂过程实际上就是将原来的Root Index Block块分割成4块，每块独立形成中间节点InterMediate Index Block，系统再重新生成一个Root Index Block（图中红色部分），分别指向分割形成的4个interMediate Index Block。此时索引结构就变成了third-level结构。</p>
+<h1><span id="总-结">总 结</span></h1><p>这篇文章是HFile结构解析的第二篇文章，主要集中介绍HFile中的数据索引块。<br>①首先分Root Index Block和NonRoot Index Block 两部分对HFile中索引块进行了解析，<br>②紧接着基于此介绍了HBase如何使用索引对数据进行检索，<br>③最后结合Memstore Flush的相关知识分析了keyvalue数据写入的过程中索引块的分裂过程。   </p>
+<p>希望通过这两篇文章的介绍，能够对HBase中数据存储文件HFile有一个更加全面深入的认识。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hbase/" rel="tag"># hbase</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/26/HBase之HFile索引机制/" rel="next" title="HBase之HFile索引机制一HFile存储结构">
+                <i class="fa fa-chevron-left"></i> HBase之HFile索引机制一HFile存储结构
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">datawall</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">1.</span> <span class="nav-text">索引分层的原因</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">2.</span> <span class="nav-text">V2版本Index Block有两类</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">2.1.</span> <span class="nav-text">Root Index Block</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">2.2.</span> <span class="nav-text">NonRoot Index Block</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">3.</span> <span class="nav-text">HFile数据完整索引流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">4.</span> <span class="nav-text">索引块分裂</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">4.1.</span> <span class="nav-text">Append流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">4.2.</span> <span class="nav-text">Finalize阶段</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">5.</span> <span class="nav-text">总 结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">datawall</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
