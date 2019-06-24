@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="druid,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="start_all.sh stop_all.sh Common Path overload middleManager Coordinator historical broker router conf/druid/_common 各个节点配置 jvm runtime   star_task.sh web_proxy_templete     start_all.sh 123456789101">
+<meta name="keywords" content="druid">
+<meta property="og:type" content="article">
+<meta property="og:title" content="druid部署之脚本">
+<meta property="og:url" content="http://yoursite.com/2019/04/28/druid部署之脚本/index.html">
+<meta property="og:site_name" content="datawall">
+<meta property="og:description" content="start_all.sh stop_all.sh Common Path overload middleManager Coordinator historical broker router conf/druid/_common 各个节点配置 jvm runtime   star_task.sh web_proxy_templete     start_all.sh 123456789101">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/pasted-47.png">
+<meta property="og:image" content="http://yoursite.com/images/pasted-48.png">
+<meta property="og:updated_time" content="2019-04-28T07:25:29.446Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="druid部署之脚本">
+<meta name="twitter:description" content="start_all.sh stop_all.sh Common Path overload middleManager Coordinator historical broker router conf/druid/_common 各个节点配置 jvm runtime   star_task.sh web_proxy_templete     start_all.sh 123456789101">
+<meta name="twitter:image" content="http://yoursite.com/images/pasted-47.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/28/druid部署之脚本/">
+
+
+
+
+
+  <title>druid部署之脚本 | datawall</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">datawall</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/28/druid部署之脚本/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="datawall">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="datawall">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">druid部署之脚本</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-28T15:01:00+08:00">
+                2019-04-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/druid/" itemprop="url" rel="index">
+                    <span itemprop="name">druid</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!-- toc -->
+<ul>
+<li><a href="#start_allsh">start_all.sh</a></li>
+<li><a href="#stop_allsh">stop_all.sh</a></li>
+<li><a href="#common-path">Common Path</a></li>
+<li><a href="#overload">overload</a></li>
+<li><a href="#middlemanager">middleManager</a></li>
+<li><a href="#coordinator">Coordinator</a></li>
+<li><a href="#historical">historical</a></li>
+<li><a href="#broker">broker</a></li>
+<li><a href="#router">router</a></li>
+<li><a href="#confdruid_common">conf/druid/_common</a></li>
+<li><a href="#各个节点配置">各个节点配置</a><ul>
+<li><a href="#jvm">jvm</a></li>
+<li><a href="#runtime">runtime</a></li>
+</ul>
+</li>
+<li><a href="#star_tasksh">star_task.sh</a><ul>
+<li><a href="#web_proxy_templete">web_proxy_templete</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h1><span id="start_allsh">start_all.sh</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line"></span><br><span class="line">#start druid</span><br><span class="line">function start_druid()&#123;</span><br><span class="line">    host=$1</span><br><span class="line">    #host=$&#123;host// / &#125;</span><br><span class="line">    shift</span><br><span class="line">    type=$1</span><br><span class="line">    for hn in $host</span><br><span class="line">    do</span><br><span class="line">      echo &quot;start $type node($hn)....&quot;</span><br><span class="line">      ssh -p 333 $hn &quot;/bin/sh /usr/local/datacenter/druid/run/start_$&#123;type&#125;.sh&quot;</span><br><span class="line">    done</span><br><span class="line">&#125;</span><br><span class="line">for command  in overlord  middleManager coordinator historical broker</span><br><span class="line">do</span><br><span class="line">  case $command in</span><br><span class="line">     (overlord)</span><br><span class="line">         start_druid &quot;node007008 node007009 node007010&quot; &quot;overlord&quot;</span><br><span class="line">     ;;</span><br><span class="line">     (middleManager)</span><br><span class="line">         start_druid &quot;node007008 node007009 node007010&quot; &quot;middleManager&quot;</span><br><span class="line">     ;;</span><br><span class="line">     (historical)</span><br><span class="line">         start_druid &quot;node007002 node007003 node007004&quot; &quot;historical&quot;</span><br><span class="line">     ;;</span><br><span class="line">     (coordinator)</span><br><span class="line">         start_druid &quot;node007008 node007009 node007010&quot; &quot;coordinator&quot;</span><br><span class="line">     ;;</span><br><span class="line">     (broker)</span><br><span class="line">         start_druid &quot;node007005 node007006 node007007&quot; &quot;broker&quot;</span><br><span class="line">     ;;</span><br><span class="line">     (*)</span><br><span class="line">         echo $usage</span><br><span class="line">         exit 1</span><br><span class="line">     ;;</span><br><span class="line">  esac</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+<ol>
+<li>overload</li>
+<li>middleManager</li>
+<li>coordinator</li>
+<li>historical</li>
+<li>broker<h1><span id="stop_allsh">stop_all.sh</span></h1></li>
+</ol>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#kill druid force</span><br><span class="line">function stop_druid()&#123;</span><br><span class="line">    host=$1</span><br><span class="line">    shift</span><br><span class="line">    type=$1</span><br><span class="line">    for hn in $host</span><br><span class="line">    do</span><br><span class="line">        echo &quot;stop $type node($hn)&quot;</span><br><span class="line">        ssh -p 333 $hn &quot;/bin/ps aux|grep $type|grep -v &apos;grep&apos;|awk -F &apos; &apos; &apos;&#123;print \$2&#125;&apos;|xargs kill -9&quot;</span><br><span class="line">    done</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1><span id="common-path">Common Path</span></h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">DRUID_HOME=/usr/local/datacenter/druid</span><br><span class="line">LORD_CONF=$DRUID_HOME/conf/druid/overlord</span><br><span class="line"></span><br><span class="line">HADOOP_HOME=/usr/local/datacenter/hadoop</span><br><span class="line">hadoop_classpath=$HADOOP_HOME/etc/hadoop:$HADOOP_HOME/share/hadoop/common/lib/*:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/hdfs:$HADOOP_HOME/share/hadoop/hdfs/lib/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/yarn/lib/*:$HADOOP_HOME/share/hadoop/yarn/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*:$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/lib/native/Linux-amd64-64/*</span><br></pre></td></tr></table></figure>
+<h1><span id="overload">overload</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">nohup java \</span><br><span class="line"> -server -Xmx12g -Xms12g -XX:NewSize=6g -XX:MaxNewSize=6g -XX:MaxDirectMemorySize=32g  -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps\</span><br><span class="line"> -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager  -Duser.timezone=Asia/Shanghai -Djava.io.tmpdir=/tmp \</span><br><span class="line"> -classpath $DRUID_HOME/conf/druid/_common:$DRUID_HOME/conf/druid/overlord:$DRUID_HOME/lib/*:$&#123;hadoop_classpath&#125; io.druid.cli.Main server overlord\</span><br><span class="line"> 2&gt;&amp;1 &gt; /tmp/druid_log/overlord.log &amp;</span><br></pre></td></tr></table></figure>
+<h1><span id="middlemanager">middleManager</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">nohup java \</span><br><span class="line"> -server -Xmx64m -Xms64m -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps\</span><br><span class="line"> -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager  -Duser.timezone=Asia/Shanghai  -Djava.io.tmpdir=/tmp \</span><br><span class="line"> -classpath $DRUID_HOME/conf/druid/_common:$DRUID_HOME/conf/druid/middleManager:$DRUID_HOME/lib/*:$&#123;hadoop_classpath&#125; io.druid.cli.Main server middleManager \</span><br><span class="line"> 2&gt;&amp;1 &gt; /tmp/druid_log/middleManager.log &amp;</span><br></pre></td></tr></table></figure>
+<h1><span id="coordinator">Coordinator</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">DRUID_HOME=/usr/local/datacenter/druid</span><br><span class="line">nohup java -server -Xmx10g -Xms10g -XX:NewSize=512m -XX:MaxNewSize=512m -XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Duser.timezone=Asia/Shanghai -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -classpath &quot;$DRUID_HOME/conf/druid/_common:$DRUID_HOME/conf/druid/coordinator:$DRUID_HOME/lib/*&quot; io.druid.cli.Main server coordinator 2&gt;&amp;1 &gt; /tmp/druid_log/coodinator.log &amp;</span><br></pre></td></tr></table></figure>
+<h1><span id="historical">historical</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">nohup java \</span><br><span class="line"> -server -Xmx12g -Xms12g -XX:NewSize=6g -XX:MaxNewSize=6g -XX:MaxDirectMemorySize=32g -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps\</span><br><span class="line"> -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Duser.timezone=Asia/Shanghai  -Djava.io.tmpdir=/tmp \</span><br><span class="line"> -classpath $DRUID_HOME/conf/druid/_common:$DRUID_HOME/conf/druid/historical:$DRUID_HOME/lib/*:$&#123;hadoop_classpath&#125; io.druid.cli.Main server historical \</span><br><span class="line"> 2&gt;&amp;1  &gt;/tmp/druid_log/historical.log &amp;</span><br></pre></td></tr></table></figure>
+<h1><span id="broker">broker</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">DRUID_HOME=/usr/local/datacenter/druid</span><br><span class="line">BROKER_CONF=$DRUID_HOME/conf/druid/broker</span><br><span class="line"></span><br><span class="line"># start druid broker</span><br><span class="line">nohup java -server -Xmx25g -Xms25g -XX:NewSize=6g -XX:MaxNewSize=6g -XX:MaxDirectMemorySize=64g -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Duser.timezone=Asia/Shanghai -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dcom.sun.management.jmxremote.port=17071 -Djava.io.tmpdir=/tmp -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -classpath $DRUID_HOME/conf/druid/_common:$DRUID_HOME/conf/druid/broker:$DRUID_HOME/lib/* io.druid.cli.Main server broker 2&gt;&amp;1 &gt; /tmp/druid_log/broker.log &amp;</span><br></pre></td></tr></table></figure>
+<h1><span id="router">router</span></h1><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">DRUID_HOME=/usr/local/datacenter/druid</span><br><span class="line">BROKER_CONF=$DRUID_HOME/conf/druid/router</span><br><span class="line"></span><br><span class="line"># start druid broker</span><br><span class="line">nohup /usr/bin/java -server -Xmx25g -Xms25g -XX:NewSize=6g -XX:MaxNewSize=6g -XX:MaxDirectMemorySize=64g -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Duser.timezone=Asia/Shanghai -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dcom.sun.management.jmxremote.port=17071 -Djava.io.tmpdir=/tmp -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -classpath $DRUID_HOME/conf/druid/_common:$DRUID_HOME/conf/druid/router:$DRUID_HOME/lib/* io.druid.cli.Main server router 2&gt;&amp;1 &gt; /tmp/druid_log/router.log &amp;</span><br></pre></td></tr></table></figure>
+<h1><span id="confdruid_common">conf/druid/_common</span></h1><hr>
+<p><img src="/images/pasted-47.png" alt="upload successful"><br>common.runtime.properties<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">druid.extensions.loadList=[&quot;druid-examples&quot;,&quot;faicon-emitter&quot;, &quot;druid-kafka-eight&quot;, &quot;druid-histogram&quot;, &quot;druid-datasketches&quot;, &quot;druid-lookups-cached-global&quot;, &quot;mysql-metadata-storage&quot;,&quot;druid-hdfs-storage&quot;]</span><br><span class="line"></span><br><span class="line">druid.extensions.hadoopDependenciesDir=/usr/local/datacenter/druid/hadoop-dependencies</span><br><span class="line"></span><br><span class="line">druid.startup.logging.logProperties=true</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.zk.service.host=192.168.7.230:2181,192.168.7.231:2181,192.168.7.232:2181</span><br><span class="line">druid.zk.service.sessionTimeoutMs=1800000</span><br><span class="line">druid.zk.paths.base=/druid/tranquility</span><br><span class="line">druid.discovery.curator.path=/druid/tranquility/discovery</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.metadata.storage.type=mysql</span><br><span class="line">druid.metadata.storage.connector.connectURI=jdbc\:mysql\://192.168.7.221\:3306/druid</span><br><span class="line">druid.metadata.storage.connector.user=druid</span><br><span class="line">druid.metadata.storage.connector.password=druid</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.storage.type=hdfs</span><br><span class="line">druid.storage.storageDirectory=hdfs://192.168.7.233:9000/druid/segments</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.indexer.logs.type=hdfs</span><br><span class="line">druid.indexer.logs.directory=hdfs://192.168.7.233:9000/druid/indexing-logs</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.selectors.indexing.serviceName=druid:tranquility:indexer</span><br><span class="line">druid.selectors.coordinator.serviceName=druid:tranquility:coordinator</span><br><span class="line"></span><br><span class="line">druid.cache.type=local</span><br><span class="line">druid.cache.sizeInBytes=128849018880</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.javascript.enabled=true</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">druid.monitoring.monitors=[&quot;com.metamx.metrics.SysMonitor&quot;,&quot;com.metamx.metrics.JvmMonitor&quot;]</span><br><span class="line">druid.emitter=faicon</span><br><span class="line">druid.emitter.faicon.host=192.168.9.110</span><br><span class="line">druid.emitter.faicon.port=8080</span><br></pre></td></tr></table></figure></p>
+<h1><span id="各个节点配置">各个节点配置</span></h1><hr>
+<p><img src="/images/pasted-48.png" alt="upload successful"></p>
+<h2><span id="jvm">jvm</span></h2><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">[dongliang@node007225 druid]$ cat conf/druid/overlord/jvm.config</span><br><span class="line">-server</span><br><span class="line">-Xms3g</span><br><span class="line">-Xmx3g</span><br><span class="line">-Duser.timezone=UTC</span><br><span class="line">-Dfile.encoding=UTF-8</span><br><span class="line">-Djava.io.tmpdir=var/tmp</span><br><span class="line">-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line">[dongliang@node007225 druid]$ cat conf/druid/coordinator/jvm.config</span><br><span class="line">-server</span><br><span class="line">-Xms3g</span><br><span class="line">-Xmx3g</span><br><span class="line">-Duser.timezone=UTC</span><br><span class="line">-Dfile.encoding=UTF-8</span><br><span class="line">-Djava.io.tmpdir=var/tmp</span><br><span class="line">-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line">-Dderby.stream.error.file=var/druid/derby.log</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/middleManager/jvm.config</span><br><span class="line">-server</span><br><span class="line">-Xms64m</span><br><span class="line">-Xmx64m</span><br><span class="line">-Duser.timezone=UTC</span><br><span class="line">-Dfile.encoding=UTF-8</span><br><span class="line">-Djava.io.tmpdir=var/tmp</span><br><span class="line">-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/historical/jvm.config</span><br><span class="line">-server</span><br><span class="line">-Xms8g</span><br><span class="line">-Xmx8g</span><br><span class="line">-XX:MaxDirectMemorySize=4096m</span><br><span class="line">-Duser.timezone=UTC</span><br><span class="line">-Dfile.encoding=UTF-8</span><br><span class="line">-Djava.io.tmpdir=var/tmp</span><br><span class="line">-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/broker/jvm.config</span><br><span class="line">-server</span><br><span class="line">-Xms24g</span><br><span class="line">-Xmx24g</span><br><span class="line">-XX:MaxDirectMemorySize=4096m</span><br><span class="line">-Duser.timezone=UTC</span><br><span class="line">-Dfile.encoding=UTF-8</span><br><span class="line">-Djava.io.tmpdir=var/tmp</span><br><span class="line">-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br></pre></td></tr></table></figure>
+<h2><span id="runtime">runtime</span></h2><hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line">[xxxx@xxxx druid]$ cat conf/druid/router/runtime.properties</span><br><span class="line">druid.host=node007224</span><br><span class="line">druid.port=8085</span><br><span class="line">druid.service=druid:tranquility:router</span><br><span class="line"></span><br><span class="line">druid.processing.numThreads=1</span><br><span class="line">druid.router.defaultBrokerServiceName=druid:tranquility:broker</span><br><span class="line">druid.router.coordinatorServiceName=druid:tranquility:coordinator</span><br><span class="line">druid.router.tierToBrokerMap=&#123;&quot;hot&quot;:&quot;druid:tranquility:broker-hot&quot;,&quot;_default_tier&quot;:&quot;druid:tranquility:broker&quot;&#125;</span><br><span class="line">druid.router.http.numConnections=50</span><br><span class="line">druid.router.http.readTimeout=PT5M</span><br><span class="line"></span><br><span class="line"># Number of threads used by the router proxy http client</span><br><span class="line">druid.router.http.numMaxThreads=100</span><br><span class="line"></span><br><span class="line">druid.server.http.numThreads=100</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/overlord/runtime.properties</span><br><span class="line">druid.host=node007225</span><br><span class="line">druid.port=8080</span><br><span class="line">druid.service=druid:tranquility:indexer</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Run in remote mode</span><br><span class="line">druid.indexer.runner.type=remote</span><br><span class="line"># Store all task state in the metadata storage</span><br><span class="line">druid.indexer.storage.type=metadata</span><br><span class="line"></span><br><span class="line">druid.indexer.runner.pendingTasksRunnerNumThreads=5</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/middleManager/runtime.properties</span><br><span class="line">druid.host=node007225</span><br><span class="line">druid.port=8092</span><br><span class="line">druid.service=druid/tranquility/middlemanager</span><br><span class="line"></span><br><span class="line"># Number of tasks per middleManager</span><br><span class="line">druid.worker.capacity=10</span><br><span class="line"></span><br><span class="line"># Task launch parameters</span><br><span class="line">druid.indexer.runner.javaOpts=-server -Xmx4g -XX:MaxDirectMemorySize=10g -Dhadoop.mapreduce.job.classloader=true -Duser.timezone=GMT+8 -Dfile.encoding=UTF-8 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+CMSClassUnloadingEnabled -XX:SoftRefLRUPolicyMSPerMB=0 -XX:+UseCompressedOops -XX:+UseCMSCompactAtFullCollection -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70</span><br><span class="line">druid.indexer.task.baseTaskDir=/tmp/druid_indexer/task</span><br><span class="line">druid.indexer.task.restoreTasksOnRestart=true</span><br><span class="line"></span><br><span class="line"># Hadoop indexing</span><br><span class="line">#druid.indexer.task.hadoopWorkingPath=var/druid/hadoop-tmp</span><br><span class="line">druid.indexer.task.defaultHadoopCoordinates=[&quot;org.apache.hadoop:hadoop-client:2.6.0-cdh5.12.0&quot;]</span><br><span class="line"></span><br><span class="line"># Peon properties</span><br><span class="line">#druid.indexer.fork.property.druid.monitoring.monitors=[&quot;com.metamx.metrics.JvmMonitor&quot;]</span><br><span class="line">druid.indexer.fork.property.druid.segmentCache.locations=[&#123;&quot;path&quot;: &quot;/tmp/druid_indexer/persistent/zk_druid&quot;, &quot;maxSize&quot;: 0&#125;]</span><br><span class="line">druid.indexer.fork.property.druid.processing.numThreads=4</span><br><span class="line">druid.indexer.fork.property.druid.processing.buffer.sizeBytes=1073741824</span><br><span class="line">druid.indexer.fork.property.druid.server.http.numThreads=100</span><br><span class="line">druid.indexer.fork.property.druid.storage.type=hdfs</span><br><span class="line">druid.indexer.fork.property.druid.storage.storageDirectory=hdfs://192.168.7.233:9000/druid/prod/v1</span><br><span class="line">druid.worker.ip=node007225</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/coordinator/runtime.properties</span><br><span class="line"># Default host: localhost. Default port: 8081. If you run each node type on its own node in production, you should override these values to be IP:8080</span><br><span class="line">druid.host=node007225</span><br><span class="line">druid.port=8081</span><br><span class="line">druid.service=druid/tranquility/coordinator</span><br><span class="line"></span><br><span class="line"># The coordinator begins assignment operations after the start delay.</span><br><span class="line"># We override the default here to start things up faster for examples.</span><br><span class="line"># In production you should use PT5M or PT10M</span><br><span class="line">druid.coordinator.startDelay=PT5M</span><br><span class="line"></span><br><span class="line">druid.selectors.indexing.serviceName=druid/tranquility/indexer</span><br><span class="line">druid.selectors.coordinator.serviceName=druid/tranquility/coordinator</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/historical/runtime.properties</span><br><span class="line">#Nodes Configs</span><br><span class="line">druid.host=node007225</span><br><span class="line">druid.port=8093</span><br><span class="line">druid.service=druid:tranquility:historical</span><br><span class="line"></span><br><span class="line">#General Configuration</span><br><span class="line">druid.server.maxSize=32985348833280</span><br><span class="line"></span><br><span class="line">#druid.server.maxSize=5497558138880</span><br><span class="line">druid.processing.numThreads=24</span><br><span class="line">#Storing Segments</span><br><span class="line">druid.segmentCache.locations=[&#123;&quot;path&quot;:&quot;/DATA1/druid/indexCache&quot;,&quot;maxSize&quot;:3298534883328&#125;]</span><br><span class="line">druid.segmentCache.numLoadingThreads=3</span><br><span class="line"></span><br><span class="line">#Cache</span><br><span class="line">druid.historical.cache.useCache=true</span><br><span class="line">druid.historical.cache.populateCache=true</span><br><span class="line">druid.cache.sizeInBytes=4368709120</span><br><span class="line"></span><br><span class="line">#Query Configs</span><br><span class="line">druid.server.http.numThreads=20</span><br><span class="line">druid.query.groupBy.maxResults=20000000</span><br><span class="line">[xxxx@xxxx druid]$ cat conf/druid/broker/runtime.properties</span><br><span class="line">druid.host=node007225</span><br><span class="line">druid.port=8082</span><br><span class="line">druid.service=druid:tranquility:broker</span><br><span class="line"></span><br><span class="line"># HTTP server threads</span><br><span class="line">druid.broker.http.numConnections=5</span><br><span class="line">druid.server.http.numThreads=25</span><br><span class="line"></span><br><span class="line"># Processing threads and buffers</span><br><span class="line">druid.processing.buffer.sizeBytes=536870912</span><br><span class="line">druid.processing.numThreads=7</span><br><span class="line"></span><br><span class="line"># Query cache</span><br><span class="line">druid.broker.cache.useCache=true</span><br><span class="line">druid.broker.cache.populateCache=true</span><br></pre></td></tr></table></figure>
+<h1><span id="star_tasksh">star_task.sh</span></h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">DRUID_HOME=/usr/local/datacenter/druid</span><br><span class="line">LORD_CONF=$DRUID_HOME/conf/druid/overlord</span><br><span class="line"></span><br><span class="line">HADOOP_HOME=/usr/local/datacenter/hadoop</span><br><span class="line">#hadoop_classpath=$HADOOP_HOME/etc/hadoop*</span><br><span class="line">hadoop_classpath=$HADOOP_HOME/etc/hadoop:$HADOOP_HOME/share/hadoop/common/lib/*:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/hdfs:$HADOOP_HOME/share/hadoop/hdfs/lib/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/yarn/lib/*:$HADOOP_HOME/share/hadoop/yarn/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*:$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/lib/native/Linux-amd64-64/*</span><br><span class="line">#hadoop_classpath=$HADOOP_HOME/etc/hadoop</span><br><span class="line"></span><br><span class="line">nohup java \</span><br><span class="line"> -Xmx512m -Xms512m -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai \</span><br><span class="line"> -classpath $DRUID_HOME/conf/druid/overlord:$&#123;hadoop_classpath&#125;:$DRUID_HOME/conf/druid/_common:$DRUID_HOME/lib:$DRUID_HOME/druid-services-0.12.1-selfcontained.jar io.druid.cli.Main index hadoop --coordinate &quot;org.apache.hadoop:hadoop-client:2.6.0-cdh5.12.0&quot;  --no-default-hadoop $DRUID_HOME/web_proxy_templete 2&gt;&amp;1 &gt; /tmp/druid_log/task.log &amp;</span><br></pre></td></tr></table></figure>
+<h2><span id="web_proxy_templete">web_proxy_templete</span></h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;type&quot;:&quot;index_hadoop&quot;,</span><br><span class="line">    &quot;spec&quot;:&#123;</span><br><span class="line">        &quot;dataSchema&quot;:&#123;</span><br><span class="line">            &quot;dataSource&quot;:&quot;web_proxy_log&quot;,</span><br><span class="line">            &quot;parser&quot;:&#123;</span><br><span class="line">                &quot;type&quot;:&quot;hadoopyString&quot;,</span><br><span class="line">                &quot;parseSpec&quot;:&#123;</span><br><span class="line">                    &quot;format&quot;:&quot;json&quot;,</span><br><span class="line">                    &quot;timestampSpec&quot;:&#123;</span><br><span class="line">                        &quot;column&quot;:&quot;basic.time_iso8601&quot;,</span><br><span class="line">                        &quot;format&quot;:&quot;auto&quot;</span><br><span class="line">                    &#125;,</span><br><span class="line">                    &quot;dimensionsSpec&quot;:&#123;</span><br><span class="line">                        &quot;dimensions&quot;:[</span><br><span class="line">                            &quot;basic.appname&quot;,</span><br><span class="line">                            &quot;basic.status&quot;,</span><br><span class="line">                            &quot;basic.entrance&quot;,</span><br><span class="line">                            &quot;basic.idc&quot;,</span><br><span class="line">                            &quot;basic.cdn&quot;,</span><br><span class="line">                            &quot;basic.request_path_pattern&quot;,</span><br><span class="line">                            &quot;basic.app_code&quot;,</span><br><span class="line">                            &quot;basic.event_code&quot;</span><br><span class="line">                        ],</span><br><span class="line">                        &quot;dimensionExclusions&quot;:[</span><br><span class="line"></span><br><span class="line">                        ]</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;metricsSpec&quot;:[</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;count&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;count&quot;</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;thetaSketch&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;uuid&quot;,</span><br><span class="line">                    &quot;fieldName&quot;:&quot;basic.uuid&quot;,</span><br><span class="line">                    &quot;size&quot;:67108864</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;thetaSketch&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;uid&quot;,</span><br><span class="line">                    &quot;fieldName&quot;:&quot;basic.mfw_uid&quot;,</span><br><span class="line">                    &quot;size&quot;:67108864</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;thetaSketch&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;client_ip&quot;,</span><br><span class="line">                    &quot;fieldName&quot;:&quot;basic.client_ip&quot;,</span><br><span class="line">                    &quot;size&quot;:67108864</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;doubleSum&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;body_bytes_sent&quot;,</span><br><span class="line">                    &quot;fieldName&quot;:&quot;basic.body_bytes_sent&quot;</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;doubleSum&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;request_time&quot;,</span><br><span class="line">                    &quot;fieldName&quot;:&quot;basic.request_time&quot;</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                    &quot;type&quot;:&quot;doubleSum&quot;,</span><br><span class="line">                    &quot;name&quot;:&quot;upstream_response_time&quot;,</span><br><span class="line">                    &quot;fieldName&quot;:&quot;basic.upstream_response_time&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            ],</span><br><span class="line">            &quot;granularitySpec&quot;:&#123;</span><br><span class="line">                &quot;type&quot;:&quot;uniform&quot;,</span><br><span class="line">                &quot;segmentGranularity&quot;:&quot;HOUR&quot;,</span><br><span class="line">                &quot;queryGranularity&quot;:&quot;MINUTE&quot;,</span><br><span class="line">                &quot;intervals&quot;:[</span><br><span class="line">                    &quot;2018-08-27T00:00:00+08:00/2018-08-27T00:59:59+08:00&quot;</span><br><span class="line">                ]</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;ioConfig&quot;:&#123;</span><br><span class="line">            &quot;type&quot;:&quot;hadoop&quot;,</span><br><span class="line">            &quot;inputSpec&quot;:&#123;</span><br><span class="line">                &quot;type&quot;:&quot;granularity&quot;,</span><br><span class="line">                &quot;dataGranularity&quot;:&quot;HOUR&quot;,</span><br><span class="line">                &quot;inputPath&quot;:&quot;hdfs://192.168.7.233:9000/batch_druid/web_proxy/&quot;,</span><br><span class="line">                &quot;pathFormat&quot;:&quot;&apos;dt&apos;=20180827/&apos;hour=00&apos;&quot;,</span><br><span class="line">                &quot;filePattern&quot;:&quot;.*part.*&quot;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;tuningConfig&quot;:&#123;</span><br><span class="line">            &quot;type&quot;:&quot;hadoop&quot;,</span><br><span class="line">            &quot;jobProperties&quot;:&#123;</span><br><span class="line">                &quot;mapreduce.job.reduces&quot;:2,</span><br><span class="line">                &quot;mapreduce.job.queuename&quot;:&quot;druid&quot;,</span><br><span class="line">                &quot;mapreduce.task.timeout&quot;:1200000</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;partitionsSpec&quot;:&#123;</span><br><span class="line">                &quot;type&quot;:&quot;hashed&quot;,</span><br><span class="line">                &quot;numShards&quot;:5</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">[dongli</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/druid/" rel="tag"># druid</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/28/druid部署之设计依据/" rel="next" title="druid部署之设计依据">
+                <i class="fa fa-chevron-left"></i> druid部署之设计依据
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/29/Canal-Maxwell/" rel="prev" title="Maxwell">
+                Maxwell <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">datawall</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">63</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">1.</span> <span class="nav-text">start_all.sh</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">2.</span> <span class="nav-text">stop_all.sh</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">3.</span> <span class="nav-text">Common Path</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">4.</span> <span class="nav-text">overload</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">5.</span> <span class="nav-text">middleManager</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">6.</span> <span class="nav-text">Coordinator</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">7.</span> <span class="nav-text">historical</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">8.</span> <span class="nav-text">broker</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">9.</span> <span class="nav-text">router</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">10.</span> <span class="nav-text">conf/druid/_common</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">11.</span> <span class="nav-text">各个节点配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">11.1.</span> <span class="nav-text">jvm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">11.2.</span> <span class="nav-text">runtime</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">12.</span> <span class="nav-text">star_task.sh</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">12.1.</span> <span class="nav-text">web_proxy_templete</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">datawall</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

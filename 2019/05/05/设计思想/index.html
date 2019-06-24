@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="设计思想,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="设计思想 &amp;amp; 开发模式 DDD(Domain-driven Design - 领域驱动设计) 命令查询职责分离(CQRS) 贫血，充血模型   Actor 模式 响应式编程 Reactor RxJava Vert.x   DODAF2.0 Serverless Service Mesh     设计思想 &amp;amp; 开发模式DDD(Domain-driven Design - 领域驱动">
+<meta name="keywords" content="设计思想">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计思想">
+<meta property="og:url" content="http://yoursite.com/2019/05/05/设计思想/index.html">
+<meta property="og:site_name" content="datawall">
+<meta property="og:description" content="设计思想 &amp;amp; 开发模式 DDD(Domain-driven Design - 领域驱动设计) 命令查询职责分离(CQRS) 贫血，充血模型   Actor 模式 响应式编程 Reactor RxJava Vert.x   DODAF2.0 Serverless Service Mesh     设计思想 &amp;amp; 开发模式DDD(Domain-driven Design - 领域驱动">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-05T02:39:52.329Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="设计思想">
+<meta name="twitter:description" content="设计思想 &amp;amp; 开发模式 DDD(Domain-driven Design - 领域驱动设计) 命令查询职责分离(CQRS) 贫血，充血模型   Actor 模式 响应式编程 Reactor RxJava Vert.x   DODAF2.0 Serverless Service Mesh     设计思想 &amp;amp; 开发模式DDD(Domain-driven Design - 领域驱动">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/05/设计思想/">
+
+
+
+
+
+  <title>设计思想 | datawall</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">datawall</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/05/设计思想/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="datawall">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="datawall">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">设计思想</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-05T10:36:00+08:00">
+                2019-05-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计思想/" itemprop="url" rel="index">
+                    <span itemprop="name">设计思想</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!-- toc -->
+<ul>
+<li><a href="#设计思想-开发模式">设计思想 &amp; 开发模式</a><ul>
+<li><a href="#ddddomain-driven-design-领域驱动设计">DDD(Domain-driven Design - 领域驱动设计)</a><ul>
+<li><a href="#命令查询职责分离cqrs">命令查询职责分离(CQRS)</a></li>
+<li><a href="#贫血充血模型">贫血，充血模型</a></li>
+</ul>
+</li>
+<li><a href="#actor-模式">Actor 模式</a></li>
+<li><a href="#响应式编程">响应式编程</a><ul>
+<li><a href="#reactor">Reactor</a></li>
+<li><a href="#rxjava">RxJava</a></li>
+<li><a href="#vertx">Vert.x</a></li>
+</ul>
+</li>
+<li><a href="#dodaf20">DODAF2.0</a></li>
+<li><a href="#serverless">Serverless</a></li>
+<li><a href="#service-mesh">Service Mesh</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h1><span id="设计思想-amp-开发模式">设计思想 &amp; 开发模式</span></h1><h2><span id="ddddomain-driven-design-领域驱动设计">DDD(Domain-driven Design - 领域驱动设计)</span></h2><ul>
+<li><p><a href="https://www.cnblogs.com/netfocus/p/5548025.html" target="_blank" rel="noopener">《浅谈我对DDD领域驱动设计的理解》</a></p>
+<ul>
+<li>概念：DDD 主要对传统软件开发流程(分析-设计-编码)中各阶段的割裂问题而提出，避免由于一开始分析不明或在软件开发过程中的信息流转不一致而造成软件无法交付（和需求方设想不一致）的问题。<strong>DDD 强调一切以领域（Domain）为中心，强调领域专家（Domain Expert）的作用，强调先定义好领域模型之后在进行开发，并且领域模型可以指导开发（所谓的驱动）</strong>。</li>
+<li>过程：<strong>理解领域、拆分领域、细化领域，模型的准确性取决于模型的理解深度</strong>。</li>
+<li>设计：DDD 中提出了建模工具，比如聚合、实体、值对象、工厂、仓储、领域服务、领域事件来帮助领域建模。</li>
+</ul>
+</li>
+<li><p><a href="https://www.cnblogs.com/butterfly100/p/7827870.html" target="_blank" rel="noopener">《领域驱动设计的基础知识总结》</a></p>
+<ul>
+<li><strong>领域（Doamin）本质上就是问题域</strong>，比如一个电商系统，一个论坛系统等。</li>
+<li>界限上下文（Bounded Context）：阐述子域之间的关系，可以简单理解成一个子系统或组件模块。</li>
+<li>领域模型（Domain Model）：DDD的核心是建立（用通用描述语言、工具—领域通用语言）正确的领域模型；反应业务需求的本质，包括实体和过程；其贯穿软件分析、设计、开发 的整个过程；常用表达领域模型的方式：图、代码或文字；</li>
+<li>领域通用语言：领域专家、开发设计人员都能立即的语言或工具。</li>
+<li>经典分层架构：用户界面/展示层、应用层、领域层、基础设施层，是四层架构模式。</li>
+<li>使用的模式：<ul>
+<li>关联尽量少，尽量单项，尽量降低整体复杂度。</li>
+<li>实体（Entity）：领域中的唯一标示，一个实体的属性尽量少，少则清晰。</li>
+<li>值对象（Value Object）：没有唯一标识，且属性值不可变，小二简单的对象，比如Date。</li>
+<li>领域服务（Domain Service）： 协调多个领域对象，只有方法没有状态(不存数据)；可以分为应用层服务，领域层服务、基础层服务。</li>
+<li>聚合及聚合根（Aggregate，Aggregate Root）：聚合定义了一组具有内聚关系的相关对象的集合；聚合根是对聚合引用的唯一元素；当修改一个聚合时，必须在事务级别；大部分领域模型中，有70%的聚合通常只有一个实体，30%只有2~3个实体；如果一个聚合只有一个实体，那么这个实体就是聚合根；如果有多个实体，那么我们可以思考聚合内哪个对象有独立存在的意义并且可以和外部直接进行交互；</li>
+<li>工厂（Factory）：类似于设计模式中的工厂模式。</li>
+<li>仓储（Repository）：持久化到DB，管理对象，且只对聚合设计仓储。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><a href="http://www.cnblogs.com/Leo_wl/p/3866629.html" target="_blank" rel="noopener">《领域驱动设计(DDD)实现之路》</a></p>
+<ul>
+<li>聚合：比如一辆汽车（Car）包含了引擎（Engine）、车轮（Wheel）和油箱（Tank）等组件，缺一不可。</li>
+</ul>
+</li>
+<li><p><a href="http://www.hollischuang.com/archives/553" target="_blank" rel="noopener">《领域驱动设计系列（2）浅析VO、DTO、DO、PO的概念、区别和用处》</a></p>
+</li>
+</ul>
+<h3><span id="命令查询职责分离cqrs">命令查询职责分离(CQRS)</span></h3><p>CQRS — Command Query Responsibility Seperation</p>
+<ul>
+<li><p><a href="https://www.cnblogs.com/cnblogsfans/p/4551990.html" target="_blank" rel="noopener">《领域驱动设计系列 (六)：CQRS》</a></p>
+<ul>
+<li>核心思想：读写分离（查询和更新在不同的方法中），不同的流程只是不同的设计方式，CQ代码分离，分布式环境中会有明显体现（有冗余数据的情况下），目的是为了高性能。</li>
+</ul>
+</li>
+<li><p><a href="http://www.techweb.com.cn/network/system/2017-07-07/2553563.shtml" target="_blank" rel="noopener">《DDD CQRS架构和传统架构的优缺点比较》</a></p>
+<ul>
+<li>最终一致的设计理念；依赖于高可用消息中间件。</li>
+</ul>
+</li>
+<li><p><a href="http://www.cnblogs.com/netfocus/p/4055346.html" target="_blank" rel="noopener">《CQRS架构简介》</a></p>
+<ul>
+<li>一个实现 CQRS 的抽象案例。</li>
+</ul>
+</li>
+<li><p><a href="http://www.uml.org.cn/zjjs/201609221.asp" target="_blank" rel="noopener">《深度长文：我对CQRS/EventSourcing架构的思考》</a></p>
+<ul>
+<li>CQRS 模式分析 + 12306 抢票案例</li>
+</ul>
+</li>
+</ul>
+<h3><span id="贫血充血模型">贫血，充血模型</span></h3><ul>
+<li><a href="https://kb.cnblogs.com/page/520743/" target="_blank" rel="noopener">《贫血，充血模型的解释以及一些经验》</a><ul>
+<li>失血模型：老子和儿子分别定义，相互不知道，二者实体定义中完全没有业务逻辑，通过外部Service进行关联。</li>
+<li>贫血模型：老子知道儿子，儿子也知道老子；部分业务逻辑放到实体中；优点：各层单项依赖，结构清楚，易于维护；缺点：不符合OO思想，相比于充血模式，Service层较为厚重；</li>
+<li>充血模型：和贫血模型类似，区别在于如何划分业务逻辑。优点：Service层比较薄，只充当Facade的角色，不和DAO打交道、复合OO思想；缺点：非单项依赖，DO和DAO之间双向依赖、和Service层的逻辑划分容易造成混乱。</li>
+<li>肿胀模式：是一种极端情况，取消Service层、全部业务逻辑放在DO中；优点：符合OO思想、简化了分层；缺点：暴露信息过多、很多非DO逻辑也会强行并入DO。这种模式应该避免。</li>
+<li>作者主张使用贫血模式。</li>
+</ul>
+</li>
+</ul>
+<h2><span id="actor-模式">Actor 模式</span></h2><p>TODO</p>
+<h2><span id="响应式编程">响应式编程</span></h2><h3><span id="reactor">Reactor</span></h3><p>TODO</p>
+<h3><span id="rxjava">RxJava</span></h3><p>TODO</p>
+<h3><span id="vertx">Vert.x</span></h3><p>TODO</p>
+<h2><span id="dodaf20">DODAF2.0</span></h2><ul>
+<li><a href="http://www.360doc.com/content/16/0627/19/33945750_571201779.shtml" target="_blank" rel="noopener">《DODAF2.0方法论》</a></li>
+<li><a href="http://blog.51cto.com/xiaoyong/1553164" target="_blank" rel="noopener">《DODAF2.0之能力视角如何落地》</a></li>
+</ul>
+<h2><span id="serverless">Serverless</span></h2><p>无需过多关系服务器的服务架构理念。</p>
+<ul>
+<li><p><a href="http://www.jdon.com/soa/serverless.html" target="_blank" rel="noopener">《什么是Serverless无服务器架构？》</a></p>
+<ul>
+<li>Serverless 不代表出去服务器，而是去除对服务器运行状态的关心。</li>
+<li>Serverless 代表一思维方式的转变，从“构建一套服务在一台服务器上，对对个事件进行响应转变为构建一个为服务器，来响应一个事件”。</li>
+<li>Serverless 不代表某个具体的框架。</li>
+</ul>
+</li>
+<li><p><a href="http://www.infoq.com/cn/news/2017/10/how-to-understand-serverless" target="_blank" rel="noopener">《如何理解Serverless？》</a></p>
+<ul>
+<li>依赖于 Baas （(Mobile) Backend as a Service） 和 Faas （Functions as a service）</li>
+</ul>
+</li>
+</ul>
+<h2><span id="service-mesh">Service Mesh</span></h2><ul>
+<li><a href="https://time.geekbang.org/article/2355" target="_blank" rel="noopener">《什么是Service Mesh？》</a></li>
+<li><a href="https://www.jianshu.com/p/e23e3e74538e" target="_blank" rel="noopener">《初识 Service Mesh》</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/设计思想/" rel="tag"># 设计思想</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/05/数据结构三之java排序工具/" rel="next" title="数据结构六之java排序工具">
+                <i class="fa fa-chevron-left"></i> 数据结构六之java排序工具
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/05/mysql回滚/" rel="prev" title="mysql回滚">
+                mysql回滚 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">datawall</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">63</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#undefined"><span class="nav-number">1.</span> <span class="nav-text">设计思想 &amp; 开发模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.1.</span> <span class="nav-text">DDD(Domain-driven Design - 领域驱动设计)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#undefined"><span class="nav-number">1.1.1.</span> <span class="nav-text">命令查询职责分离(CQRS)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#undefined"><span class="nav-number">1.1.2.</span> <span class="nav-text">贫血，充血模型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.2.</span> <span class="nav-text">Actor 模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.3.</span> <span class="nav-text">响应式编程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#undefined"><span class="nav-number">1.3.1.</span> <span class="nav-text">Reactor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#undefined"><span class="nav-number">1.3.2.</span> <span class="nav-text">RxJava</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#undefined"><span class="nav-number">1.3.3.</span> <span class="nav-text">Vert.x</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.4.</span> <span class="nav-text">DODAF2.0</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.5.</span> <span class="nav-text">Serverless</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#undefined"><span class="nav-number">1.6.</span> <span class="nav-text">Service Mesh</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">datawall</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
